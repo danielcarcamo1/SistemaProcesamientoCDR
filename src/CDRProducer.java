@@ -1,31 +1,73 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 public class CDRProducer implements Runnable {
-    private final CDRFileReader reader;
+    private final String filePath;
     private final CDRQueue queue;
     private final String producerName;
+    private final CDRProcessor processor;
+    private int recordsProduced;
+    private final LocalDateTime startTime;
 
-    public CDRProducer(CDRFileReader reader, CDRQueue queue, String name) {
-        this.reader = reader;
+    public CDRProducer(String filePath, CDRQueue queue, String name, CDRProcessor processor) {
+        this.filePath = filePath;
         this.queue = queue;
         this.producerName = name;
+        this.processor = processor;
+        this.recordsProduced = 0;
+        this.startTime = LocalDateTime.now();
     }
 
     @Override
     public void run() {
-        try {
-            int recordsProcessed = 0;
-            while (true) {
-                CDR cdr = reader.readNextCDR();
-                if (cdr == null) break;
+        processor.updateProducerStatus(producerName, "Started", recordsProduced, startTime);
 
-                queue.put(cdr);
-                recordsProcessed++;
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            reader.readLine(); // Skip header
 
-                /// //
-            /// //
+            while ((line = reader.readLine()) != null) {
+                CDR cdr = parseCDR(line);
+                if (cdr != null) {
+                    queue.put(cdr);
+                    recordsProduced++;
+                    processor.updateProducerStatus(producerName, "Running", recordsProduced, startTime);
+                }
+                Thread.sleep(50);
             }
+
+            processor.updateProducerStatus(producerName, "Completed", recordsProduced, startTime);
         } catch (Exception e) {
-            System.out.println(producerName + "Error:" + e.getMessage());
-            Thread.currentThread().interrupt();
+            processor.updateProducerStatus(producerName, "Error: " + e.getMessage(), recordsProduced, startTime);
         }
+    }
+
+    private CDR parseCDR(String line) {
+        String[] parts = line.split(",");
+        if (parts.length < 7) return null;
+
+        try {
+            return new CDR(
+                    parts[0].trim(),
+                    parts[1].trim(),
+                    parts[2].trim(),
+                    parts[3].trim(),
+                    Integer.parseInt(parts[4].trim()),
+                    Double.parseDouble(parts[5].trim()),
+                    parts[6].trim()
+            );
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    public int getRecordsProduced() {
+        return recordsProduced;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
     }
 }

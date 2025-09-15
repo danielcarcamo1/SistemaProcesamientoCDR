@@ -1,4 +1,6 @@
 public class CDR {
+
+    //datos de las llamadas
     private final String accountNumber;
     private final String callingNumber;
     private final String calledNumber;
@@ -7,6 +9,7 @@ public class CDR {
     private final double cost;
     private final String callType;
 
+    //cosntructor
     public CDR(String accountNumber, String callingNumber, String calledNumber,
                String timestamp, int durationMinutes, double cost, String callType) {
         this.accountNumber = accountNumber;
@@ -18,7 +21,7 @@ public class CDR {
         this.callType = callType;
     }
 
-    // Getters
+    //metodos getters
     public String getAccountNumber() { return accountNumber; }
     public String getCallingNumber() { return callingNumber; }
     public String getCalledNumber() { return calledNumber; }

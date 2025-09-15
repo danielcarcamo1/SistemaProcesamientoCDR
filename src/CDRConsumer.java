@@ -1,51 +1,66 @@
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicDouble;
+import java.time.LocalDateTime;
 
 public class CDRConsumer implements Runnable {
     private final CDRQueue queue;
     private final String consumerName;
-    private final ConcurrentHashMap<String, AtomicInteger> totalMinutes;
-    private final ConcurrentHashMap<String, AtomicDouble> totalCosts;
+    private final CDRDatabase database;
+    private final CDRProcessor processor;
+    private int recordsConsumed;
+    private int totalMinutesProcessed;
+    private final LocalDateTime startTime;
+    private volatile boolean running = true;
 
-    public CDRConsumer(CDRQueue queue, String name,
-                       ConcurrentHashMap<String, AtomicInteger> totalMinutes,
-                       ConcurrentHashMap<String, AtomicDouble> totalCosts) {
+    public CDRConsumer(CDRQueue queue, String name, CDRDatabase database, CDRProcessor processor) {
         this.queue = queue;
         this.consumerName = name;
-        this.totalMinutes = totalMinutes;
-        this.totalCosts = totalCosts;
+        this.database = database;
+        this.processor = processor;
+        this.recordsConsumed = 0;
+        this.totalMinutesProcessed = 0;
+        this.startTime = LocalDateTime.now();
+        this.running = true;
     }
 
     @Override
     public void run() {
+        processor.updateConsumerStatus(consumerName, "Started", recordsConsumed, totalMinutesProcessed, startTime);
+
         try {
-            int recordsProcessed = 0;
-            while (true) {
+            while (running && !Thread.currentThread().isInterrupted()) {
                 CDR cdr = queue.take();
-
-                // Process CDR
                 processCDR(cdr);
-                recordsProcessed++;
-
-                System.out.println(consumerName + " consumed: " + cdr.getAccountNumber());
-                Thread.sleep(100); // Simulate processing time
+                recordsConsumed++;
+                processor.updateConsumerStatus(consumerName, "Running", recordsConsumed, totalMinutesProcessed, startTime);
+                Thread.sleep(100);
             }
+            processor.updateConsumerStatus(consumerName, "Completed", recordsConsumed, totalMinutesProcessed, startTime);
         } catch (InterruptedException e) {
-            System.out.println(consumerName + " finished. Processed: " + recordsProcessed);
+            processor.updateConsumerStatus(consumerName, "Interrupted", recordsConsumed, totalMinutesProcessed, startTime);
             Thread.currentThread().interrupt();
+        } catch (Exception e) {
+            processor.updateConsumerStatus(consumerName, "Error: " + e.getMessage(), recordsConsumed, totalMinutesProcessed, startTime);
         }
     }
 
-    private void processCDR(CDR cdr) {
-        String account = cdr.getAccountNumber();
+    private void processCDR(CDR cdr) throws Exception {
+        database.insertCDR(cdr);
+        database.updateAccountSummary(cdr.getAccountNumber(), cdr.getDurationMinutes(), cdr.getCost(), cdr.getCallType());
+        totalMinutesProcessed += cdr.getDurationMinutes();
+    }
 
-        // Update total minutes
-        totalMinutes.putIfAbsent(account, new AtomicInteger(0));
-        totalMinutes.get(account).addAndGet(cdr.getDurationMinutes());
+    public void stop() {
+        this.running = false;
+    }
 
-        // Update total cost
-        totalCosts.putIfAbsent(account, new AtomicDouble(0.0));
-        totalCosts.get(account).addAndGet(cdr.getCost());
+    public int getRecordsConsumed() {
+        return recordsConsumed;
+    }
+
+    public int getTotalMinutesProcessed() {
+        return totalMinutesProcessed;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
     }
 }
