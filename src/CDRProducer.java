@@ -20,13 +20,14 @@ public class CDRProducer implements Runnable {
         this.startTime = LocalDateTime.now();
     }
 
+    //metodo run
     @Override
     public void run() {
         processor.updateProducerStatus(producerName, "Started", recordsProduced, startTime);
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
-            reader.readLine(); // Skip header
+            reader.readLine(); //saltar encabezado (skip header)
 
             while ((line = reader.readLine()) != null) {
                 CDR cdr = parseCDR(line);
@@ -35,6 +36,7 @@ public class CDRProducer implements Runnable {
                     recordsProduced++;
                     processor.updateProducerStatus(producerName, "Running", recordsProduced, startTime);
                 }
+                //tiempo de ssimulacio del procesamiento
                 Thread.sleep(50);
             }
 
@@ -44,6 +46,7 @@ public class CDRProducer implements Runnable {
         }
     }
 
+    //metodo de parseo convierte csv en un objeto CDR
     private CDR parseCDR(String line) {
         String[] parts = line.split(",");
         if (parts.length < 7) return null;
@@ -63,6 +66,7 @@ public class CDRProducer implements Runnable {
         }
     }
 
+    //metodos getter
     public int getRecordsProduced() {
         return recordsProduced;
     }
