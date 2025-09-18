@@ -249,6 +249,16 @@ public class CDRGUI extends JFrame {
 
     //metodo main
     public static void main(String[] args) {
+        try {
+            // Forzar carga del driver JDBC de MySQL
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            System.out.println("✅ Driver JDBC cargado correctamente");
+        } catch (ClassNotFoundException e) {
+            System.err.println("❌ No se encontró el driver JDBC de MySQL en el classpath");
+            e.printStackTrace();
+            return;
+        }
+
         SwingUtilities.invokeLater(() -> {
             new CDRGUI();
         });
