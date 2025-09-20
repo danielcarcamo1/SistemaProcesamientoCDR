@@ -5,9 +5,9 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-//Interfaz grafica principal del sistema de procesamiento CDR
+//interfaz grafica principal del sistema de procesamiento CDR
 public class CDRGUI extends JFrame {
-    // Componentes de la interfaz
+    //componentes de la interfaz
     private CDRProcessor processor;
     private JTextArea producerStatusArea;
     private JTextArea consumerStatusArea;
@@ -20,7 +20,7 @@ public class CDRGUI extends JFrame {
     // Constructor principal
     public CDRGUI() {
         try {
-            // Conexión a base de datos - EDITAR CREDENCIALES AQUÍ
+            // Conexión a base de datos
             database = new CDRDatabase(
                     "jdbc:mysql://localhost:3306/cdr_db",
                     "cdr_user",
@@ -28,7 +28,7 @@ public class CDRGUI extends JFrame {
             );
             this.processor = new CDRProcessor(database);
             initializeGUI();
-            System.out.println("✅ GUI inicializada");
+            System.out.println("GUI inicializada");
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error de conexión BD: " + e.getMessage());
             System.exit(1);
@@ -97,7 +97,7 @@ public class CDRGUI extends JFrame {
         setVisible(true);
     }
 
-    // Iniciar procesamiento de archivo CSV
+    //iniciar procesamiento de archivo CSV
     private void startProcessing(ActionEvent e) {
         if (processor == null) return;
 
@@ -121,7 +121,7 @@ public class CDRGUI extends JFrame {
         }
         startButton.setEnabled(true);
         stopButton.setEnabled(false);
-        resultsArea.append("✅ Procesamiento detenido\n");
+        resultsArea.append("Procesamiento detenido");
     }
 
     //mostrar resultados del procesamiento
@@ -132,7 +132,7 @@ public class CDRGUI extends JFrame {
             List<String> results = processor.getResults();
             resultsArea.setText("");
 
-            // Encabezado de resultados
+            //encabezado de resultados
             resultsArea.append("=== RESULTADOS DE CUENTAS ===\n\n");
             resultsArea.append("CUENTA     | MINUTOS | COSTO    | INT | NAC | LOC\n");
             resultsArea.append("-------------------------------------------------\n");
@@ -252,9 +252,9 @@ public class CDRGUI extends JFrame {
         try {
             // Forzar carga del driver JDBC de MySQL
             Class.forName("com.mysql.cj.jdbc.Driver");
-            System.out.println("✅ Driver JDBC cargado correctamente");
+            System.out.println("Driver JDBC cargado correctamente");
         } catch (ClassNotFoundException e) {
-            System.err.println("❌ No se encontró el driver JDBC de MySQL en el classpath");
+            System.err.println("No se encontro el driver JDBC de MySQL en el classpath");
             e.printStackTrace();
             return;
         }

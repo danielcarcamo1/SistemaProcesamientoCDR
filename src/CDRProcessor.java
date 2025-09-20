@@ -23,7 +23,7 @@ public class CDRProcessor {
         this.consumers = new ArrayList<>();
     }
 
-    //inia el procesamiento de CDRs con el número especificado de productores y consumidores
+    //inia el procesamiento de CDR con el número especificado de productores y consumidores
     public void startProcessing(String filePath, int numProducers, int numConsumers) {
         CDRQueue queue = new CDRQueue(1000);
 

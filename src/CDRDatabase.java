@@ -30,7 +30,7 @@ public class CDRDatabase {
         }
     }
 
-    // ✅ MeTODO UPDATE SUMMARY - agregar este metodo
+    //metodo update summary
     public void updateAccountSummary(String accountNumber, int duration, double cost, String callType) throws SQLException {
         String sql = "INSERT INTO account_summary (account_number, total_minutes, total_cost, international_calls, national_calls, local_calls) VALUES (?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE total_minutes = total_minutes + ?, total_cost = total_cost + ?, international_calls = international_calls + ?, national_calls = national_calls + ?, local_calls = local_calls + ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -49,7 +49,7 @@ public class CDRDatabase {
         }
     }
 
-    // ✅ MeTODO GET SUMMARY - agregar este metodo
+    //metodo get summary
     public List<String> getAccountSummary() throws SQLException {
         List<String> results = new ArrayList<>();
         String sql = "SELECT account_number, total_minutes, total_cost, international_calls, national_calls, local_calls FROM account_summary ORDER BY total_cost DESC";
@@ -64,7 +64,7 @@ public class CDRDatabase {
         return results;
     }
 
-    // ✅ MeTODO GET CONNECTION - agregar este metodo
+    //metodo get connection
     public Connection getConnection() throws SQLException {
         return connection;
     }
